@@ -9,10 +9,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.aallam.openai.api.BetaOpenAI
-import com.aallam.openai.api.chat.ChatMessage
-import com.aallam.openai.api.model.ModelId
-import androidx.compose.runtime.Composable
 import com.example.chatbothealth.ui.theme.AppTheme
 
 data class Message(val content: String, val isUser: Boolean, val userName: String, val userImageId: Int)
@@ -38,11 +34,13 @@ class MainActivity : AppCompatActivity() {
             AppTheme {
                 val navController = rememberNavController()
 
-                NavHost(navController = navController, startDestination = "login") {
+                NavHost(navController = navController, startDestination = "profile") {
                     composable("login") { LoginScreen(navController) }
                     composable("register") { RegisterScreen(navController) }
                     composable("chat") { ChatScreen(navController) }
                     composable("goals") { GoalsScreen(navController) }
+                    composable("profile") { ProfileScreen(navController) }
+                    composable("settings") { SettingsScreen(navController) }
 
                 }
             }

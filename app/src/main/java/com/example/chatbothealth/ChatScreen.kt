@@ -47,7 +47,7 @@ fun ChatScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Healthbot",
+                    text = "Chat",
                     fontWeight = FontWeight.Bold,
                     fontSize = 30.sp
                 )
@@ -58,7 +58,7 @@ fun ChatScreen(navController: NavController) {
 
             LazyColumn(modifier = Modifier.weight(1f)) {
                 items(messages) { message ->
-                    MessageRow(message, "Kullanıcı", R.drawable.userprofile)
+                    MessageRow(message, "User", R.drawable.userprofile)
                 }
             }
 
@@ -83,7 +83,7 @@ fun ChatScreen(navController: NavController) {
                                 Message(
                                     textState.value,
                                     true,
-                                    "Kullanıcı",
+                                    "USer",
                                     R.drawable.userprofile
                                 )
                             )
@@ -120,7 +120,7 @@ fun ChatScreen(navController: NavController) {
                 verticalAlignment = Alignment.Bottom,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 8.dp, end = 8.dp)
+                    .padding(start = 8.dp)
             ) {
                 ImageButton(
                     imagePainter = painterResource(id = R.drawable.profilepage),
@@ -134,7 +134,7 @@ fun ChatScreen(navController: NavController) {
                     onClick = {
                         navController.navigate("chat")
                     },
-                    modifier = Modifier.size(130.dp),
+                    modifier = Modifier.size(120.dp),
 
                     )
 
@@ -142,7 +142,7 @@ fun ChatScreen(navController: NavController) {
                     imagePainter = painterResource(id = R.drawable.goalspage),
                     onClick = {
                         navController.navigate("goals")
-                    }
+                    },
                 )
             }
         }
@@ -153,7 +153,7 @@ fun ImageButton(
     imagePainter: Painter, // Resim için Painter nesnesi
     onClick: () -> Unit, // Tıklama işlevi
     modifier: Modifier = Modifier, // Boyut ve diğer ayarlar için Modifier
-    buttonSize: Int = 110 // Butonun boyutu dp cinsinden
+    buttonSize: Int = 115 // Butonun boyutu dp cinsinden
 ) {
     Button(
         onClick = onClick,
@@ -164,8 +164,7 @@ fun ImageButton(
     ) {
         Image(
             painter = imagePainter,
-            contentDescription = null, // Erişilebilirlik için içerik tanımı
-            modifier = Modifier.size(buttonSize.dp)
+            contentDescription = null,
         )
     }
 }

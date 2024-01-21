@@ -5,17 +5,21 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import com.example.chatbothealth.R
 import com.example.chatbothealth.ui.theme.AppTheme
-
+import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun LoginScreen(navController: NavController) {
-    var username by remember { mutableStateOf("") }
+    val auth = FirebaseAuth.getInstance()
+    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+
     AppTheme {
         Column(
             modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -29,9 +33,9 @@ fun LoginScreen(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(16.dp))
             TextField(
-                value = username,
-                onValueChange = { username = it },
-                label = { Text("Username") }
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") }
             )
             Spacer(modifier = Modifier.height(8.dp))
             TextField(
@@ -39,21 +43,56 @@ fun LoginScreen(navController: NavController) {
                 onValueChange = { password = it },
                 label = { Text("Password") }
             )
+            Spacer(modifier = Modifier.height(16.dp))
+
             Button(onClick = {
-                Log.d("LoginScreen", "Login butonuna tıklandı.")
-                navController.navigate("chat")
-            }) {
+                loginUser(email, password, navController) { error ->
+                    errorMessage = error
+                    showErrorDialog = true
+                }
+            },
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = Color(0xFF345323),
+                    contentColor = Color.White
+                )) {
                 Text("Login")
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(onClick = { navController.navigate("register") }) {
-                Text("Don't have an account? Register")
+
+            if (showErrorDialog) {
+                AlertDialog(
+                    onDismissRequest = { showErrorDialog = false },
+                    title = { Text("Error") },
+                    text = { Text(errorMessage) },
+                    confirmButton = {
+                        Button(onClick = { showErrorDialog = false }) {
+                            Text("OK")
+                        }
+                    }
+                ) }
+
+            Button(
+                onClick = { navController.navigate("register") },
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = Color(0xFF345323),
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Register")
             }
+
         }
     }
 }
-@Preview(showBackground = true)
-@Composable
-fun PreviewSignInScreen() {
-    //LoginScreen(onRegisterClicked = { showLogin = false })
+
+fun loginUser(email: String, password: String, navController: NavController, onError: (String) -> Unit) {
+    FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
+        .addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                // Login başarılı, chat ekranına yönlendir
+                navController.navigate("chat")
+            } else {
+                // Login başarısız, hata mesajı göster
+                onError(task.exception?.message ?: "Login failed due to an unknown error")
+            }
+        }
 }

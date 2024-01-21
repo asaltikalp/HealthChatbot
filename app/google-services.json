@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "831892323664",
+    "project_id": "healthbot-6de59",
+    "storage_bucket": "healthbot-6de59.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:831892323664:android:2f6a02af9b93b18516c055",
+        "android_client_info": {
+          "package_name": "com.example.chatbothealth"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjKyaWyo67a3OBMt7oU73nW5FbFmZtEgo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
