@@ -1,21 +1,14 @@
 package com.example.chatbothealth
 
 import android.util.Log
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.BottomNavigation
-import androidx.compose.material.BottomNavigationItem
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -58,7 +51,12 @@ fun ChatScreen(navController: NavController) {
 
             LazyColumn(modifier = Modifier.weight(1f)) {
                 items(messages) { message ->
-                    MessageRow(message, "User", R.drawable.userprofile)
+                    MessageRow(
+                        message = message,
+                        isFromUser = message.isFromUser,
+                        userImageId = R.drawable.userprofile,
+                        assistantImageId = R.drawable.logo // Asistan için bir profil resmi tanımlamanız gerekir
+                    )
                 }
             }
 
@@ -70,7 +68,7 @@ fun ChatScreen(navController: NavController) {
                 OutlinedTextField(
                     value = textState.value,
                     onValueChange = { textState.value = it },
-                    label = { Text("Mesajınızı yazın") },
+                    label = { Text("Ask something...") },
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.weight(0.1f))
@@ -82,8 +80,8 @@ fun ChatScreen(navController: NavController) {
                             messages.add(
                                 Message(
                                     textState.value,
-                                    true,
-                                    "USer",
+                                    true, // Kullanıcıdan gelen mesaj
+                                    "User",
                                     R.drawable.userprofile
                                 )
                             )
@@ -97,15 +95,15 @@ fun ChatScreen(navController: NavController) {
                                         assistantMessage = pastAssistantMessages.joinToString(
                                             separator = "\n"
                                         ),
-                                        maxToken = 150
+                                        maxToken = 100
                                     )
                                 )
                                 messages.add(
                                     Message(
                                         response,
-                                        false,
+                                        false, // Asistandan gelen mesaj
                                         "Assistant",
-                                        R.drawable.userprofile
+                                        R.drawable.logo // Asistan için profil resmi
                                     )
                                 )
                                 pastAssistantMessages.add(response)  // Update the conversation history with the assistant's response
@@ -113,37 +111,52 @@ fun ChatScreen(navController: NavController) {
                             textState.value = ""
                         }
                     }) {
-                    Text("Gönder")
+                    Text("Send")
                 }
             }
             Row(
                 verticalAlignment = Alignment.Bottom,
-                modifier = Modifier
+                horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 8.dp)
             ) {
-                ImageButton(
-                    imagePainter = painterResource(id = R.drawable.profilepage),
-                    onClick = {
-                        navController.navigate("profile")
-                    }
-                )
-
-                ImageButton(
-                    imagePainter = painterResource(id = R.drawable.logo),
-                    onClick = {
-                        navController.navigate("chat")
-                    },
-                    modifier = Modifier.size(120.dp),
-
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally // Bunu ekleyin
+                ) {
+                    ImageButton(
+                        imagePainter = painterResource(id = R.drawable.profilepage),
+                        onClick = {
+                            navController.navigate("profile")
+                        }
                     )
+                    Text(text = "Profile")
 
-                ImageButton(
-                    imagePainter = painterResource(id = R.drawable.goalspage),
-                    onClick = {
-                        navController.navigate("goals")
-                    },
-                )
+                }
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally // Bunu ekleyin
+                ) {
+                    ImageButton(
+                        imagePainter = painterResource(id = R.drawable.logo),
+                        onClick = {
+                            navController.navigate("chat")
+                        },
+                        modifier = Modifier.size(115.dp),
+                        )
+                    Text(text = "Chat")
+                }
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally // Bunu ekleyin
+                ) {
+
+                    ImageButton(
+                        imagePainter = painterResource(id = R.drawable.goalspage),
+                        onClick = {
+                            navController.navigate("goals")
+                        },
+                    )
+                    Text(text = "Goals")
+                }
             }
         }
     }
@@ -153,7 +166,7 @@ fun ImageButton(
     imagePainter: Painter, // Resim için Painter nesnesi
     onClick: () -> Unit, // Tıklama işlevi
     modifier: Modifier = Modifier, // Boyut ve diğer ayarlar için Modifier
-    buttonSize: Int = 115 // Butonun boyutu dp cinsinden
+    buttonSize: Int = 98 // Butonun boyutu dp cinsinden
 ) {
     Button(
         onClick = onClick,
@@ -166,24 +179,6 @@ fun ImageButton(
             painter = imagePainter,
             contentDescription = null,
         )
-    }
-}
-@Composable
-fun CustomButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    text: String,
-    buttonColors: ButtonColors = ButtonDefaults.buttonColors(
-        containerColor = MaterialTheme.colorScheme.primary,
-        contentColor = MaterialTheme.colorScheme.onPrimary
-    )
-) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.height(48.dp), // Özelleştirilmiş boyut
-        colors = buttonColors
-    ) {
-        Text(text)
     }
 }
 
@@ -235,19 +230,21 @@ suspend fun callChatOpenAI(openAIOptions: ChatOpenAIOptions): String {
 }
 
 @Composable
-fun MessageRow(message: Message, userName: String, userImageId: Int) {
+fun MessageRow(message: Message, isFromUser: Boolean, userImageId: Int, assistantImageId: Int) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = if (isFromUser) Arrangement.Start else Arrangement.End // Mesajın yeri burada belirlenir
     ) {
+        val imageId = if (isFromUser) userImageId else assistantImageId
         Image(
-            painter = painterResource(id = userImageId),
+            painter = painterResource(id = imageId),
             contentDescription = "Profil Resmi",
             modifier = Modifier.size(40.dp)
         )
         Spacer(modifier = Modifier.width(8.dp))
         Column {
-            Text(text = userName, fontWeight = FontWeight.Bold)
+            Text(text = if (isFromUser) "User" else "Assistant", fontWeight = FontWeight.Bold) // Mesajın kimden geldiği burada belirlenir
             Text(text = message.content)
         }
     }

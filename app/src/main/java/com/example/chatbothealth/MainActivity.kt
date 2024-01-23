@@ -11,7 +11,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.chatbothealth.ui.theme.AppTheme
 
-data class Message(val content: String, val isUser: Boolean, val userName: String, val userImageId: Int)
+data class Message(
+    val content: String,
+    val isFromUser: Boolean, // Bu alanı ekleyin
+    val userName: String,
+    val userImageId: Int)
 
 interface OpenAIOptions {
     var maxToken: Int
@@ -34,7 +38,7 @@ class MainActivity : AppCompatActivity() {
             AppTheme {
                 val navController = rememberNavController()
 
-                NavHost(navController = navController, startDestination = "profile") {
+                NavHost(navController = navController, startDestination = "chat") {
                     composable("login") { LoginScreen(navController) }
                     composable("register") { RegisterScreen(navController) }
                     composable("chat") { ChatScreen(navController) }

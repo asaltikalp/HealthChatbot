@@ -1,20 +1,27 @@
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.chatbothealth.R
 import com.example.chatbothealth.ui.theme.AppTheme
 import com.google.firebase.auth.FirebaseAuth
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+
 @Composable
 fun LoginScreen(navController: NavController) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var passwordVisibility by remember { mutableStateOf(false) }
     var showErrorDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
@@ -36,10 +43,17 @@ fun LoginScreen(navController: NavController) {
                 label = { Text("Email") }
             )
             Spacer(modifier = Modifier.height(8.dp))
-            TextField(
+            OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Password") }
+                label = { Text("Password") },
+                visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    val image = if (passwordVisibility) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                    IconButton(onClick = { passwordVisibility = !passwordVisibility }) {
+                        Icon(imageVector = image, contentDescription = "Toggle Password Visibility")
+                    }
+                }
             )
             Spacer(modifier = Modifier.height(16.dp))
 

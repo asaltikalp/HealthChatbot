@@ -17,11 +17,14 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import java.util.UUID
-
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navController: NavController) {
@@ -35,7 +38,10 @@ fun SettingsScreen(navController: NavController) {
     val currentUser = FirebaseAuth.getInstance().currentUser
     val db = FirebaseFirestore.getInstance()
     var profileImageUrl by remember { mutableStateOf("") }
+    var gender by remember { mutableStateOf("") }
 
+    var expanded by remember { mutableStateOf(false) }
+    val genderOptions = listOf("Male", "Female", "Other")
 
     val coroutineScope = rememberCoroutineScope()
     val storageRef = FirebaseStorage.getInstance().reference
@@ -95,19 +101,7 @@ fun SettingsScreen(navController: NavController) {
         Button(onClick = { imagePickerLauncher.launch("image/*") }) {
             Text("Select Profile Image")
         }
-//        Button(
-//            onClick = {
-//                // ... [Mevcut kaydetme işlemi]
-//                currentUser?.email?.let { email ->
-//                    db.collection("users").document(email).update(
-//                        "profileImageUrl", profileImageUrl
-//                    )
-//                }
-//            }
-//        ) {
-//            Text("Save Profile Image")
-//        }
-        // Mevcut alanlar
+
         OutlinedTextField(
             value = username,
             onValueChange = { username = it },
@@ -117,9 +111,42 @@ fun SettingsScreen(navController: NavController) {
             value = phone,
             onValueChange = { phone = it },
             label = { Text("Phone") },
-            isError = phone.length != 10  // Basit telefon numarası doğrulaması
+            isError = phone.length != 10
         )
-        // Sağlık bilgileri için yeni alanlar
+//        OutlinedTextField(
+//            value = gender,
+//            onValueChange = { gender = it },
+//            label = { Text("Gender") },
+//            readOnly = true,
+//            trailingIcon = {
+//                IconButton(onClick = { expanded = true }) {
+//                    Icon(Icons.Filled.ArrowDropDown, "drop-down")
+//                }
+//            }
+//        )
+        OutlinedTextField(
+            value = gender,
+            onValueChange = { gender = it },
+            label = { Text("Gender") },
+            readOnly = true,
+            trailingIcon = {
+                Icon(Icons.Filled.ArrowDropDown, "drop-down", Modifier.clickable { expanded = true })
+            }
+        )
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            genderOptions.forEach { option ->
+                DropdownMenuItem(onClick = {
+                    gender = option
+                    expanded = false
+                }) {
+                    Text(option)
+                }
+            }
+        }
         OutlinedTextField(
             value = weight,
             onValueChange = { weight = it },
@@ -152,6 +179,7 @@ fun SettingsScreen(navController: NavController) {
                         val userMap = mapOf(
                             "username" to username,
                             "phone" to phone,
+                            "gender" to gender,
                             "weight" to weight,
                             "height" to height,
                             "bloodType" to bloodType,

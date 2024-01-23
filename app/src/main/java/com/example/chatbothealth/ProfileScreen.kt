@@ -44,6 +44,7 @@ fun ProfileScreen(navController: NavController) {
     var userWaterIntake by remember { mutableStateOf("Loading...") }
     var userBMI by remember { mutableStateOf("Loading...") }
     var userProfileImageUrl by remember { mutableStateOf("") }
+    var userGender by remember { mutableStateOf("Loading...") }
 
     LaunchedEffect(currentUser) {
         currentUser?.let { user ->
@@ -59,10 +60,12 @@ fun ProfileScreen(navController: NavController) {
                     userWaterIntake = document.getString("waterIntake") ?: "No Water Intake"
                     userBMI = document.getString("bmi") ?: "No BMI"
                     userProfileImageUrl = document.getString("profileImageUrl") ?: ""
+                    userGender = document.getString("gender") ?: "Not Specified"
                 }
             }
         }
     }
+
 
     AppTheme {
         Column(
@@ -104,15 +107,6 @@ fun ProfileScreen(navController: NavController) {
                             .background(MaterialTheme.colorScheme.primary)
                     )
                 }
-//                Image(
-//                    painter = painterResource(id = R.drawable.userprofile),
-//                    contentDescription = "Profile Photo",
-//                    modifier = Modifier
-//                        .size(80.dp)
-//                        .clip(CircleShape)
-//                        .background(MaterialTheme.colorScheme.primary)
-//                )
-
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
                     Row {
@@ -146,13 +140,14 @@ fun ProfileScreen(navController: NavController) {
                     val iconId: Int,
                     val backgroundColor: Color // Renk özelliğini ekleyin
                 )
-
+                // healthInfos listesini güncelle
                 val healthInfos = listOf(
                     HealthInfo("${userWeight} kg", R.drawable.weight, Color(0xFF8ad493)),
                     HealthInfo("${userHeight} cm", R.drawable.height, Color(0xFF8ad493)),
+                    HealthInfo(userBMI, R.drawable.bmi, getBmiColor(userBMI)),
                     HealthInfo(userBloodType, R.drawable.blood, Color(0xFF8ad493)),
                     HealthInfo("$userWaterIntake Glass of Water", R.drawable.water, Color(0xFF8ad493)),
-                    HealthInfo(userBMI, R.drawable.bmi, Color(0xFF8ad493))
+                    HealthInfo(" $userGender", R.drawable.gender, Color(0xFF8ad493))
                 )
                 Spacer(modifier = Modifier.height(32.dp))
 
@@ -194,47 +189,50 @@ fun ProfileScreen(navController: NavController) {
             }
 
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Settings Button
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End
-            ) {
-
-            }
             Spacer(modifier = Modifier.weight(1f))
 
             Row(
                 verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.Center,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(start = 8.dp)
             ) {
-                ImageButton(
-                    imagePainter = painterResource(id = R.drawable.profilepage),
-                    onClick = {
-                        navController.navigate("profile")
-                    },
-                    modifier = Modifier.size(130.dp),
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally // Bunu ekleyin
+                ) {
+                    ImageButton(
+                        imagePainter = painterResource(id = R.drawable.profilepage),
+                        onClick = {
+                            navController.navigate("profile")
+                        },
+                        modifier = Modifier.size(115.dp),
+                        )
+                    Text(text = "Profile")
 
-                ImageButton(
-                    imagePainter = painterResource(id = R.drawable.logo),
-                    onClick = {
-                        navController.navigate("chat")
-                    }
+                }
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally // Bunu ekleyin
+                ) {
+                    ImageButton(
+                        imagePainter = painterResource(id = R.drawable.logo),
+                        onClick = {
+                            navController.navigate("chat")
+                        }                   )
+                    Text(text = "Chat")
+                }
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally // Bunu ekleyin
+                ) {
 
-                )
-
-                ImageButton(
-                    imagePainter = painterResource(id = R.drawable.goalspage),
-                    onClick = {
-                        navController.navigate("goals")
-                    }
-                )
+                    ImageButton(
+                        imagePainter = painterResource(id = R.drawable.goalspage),
+                        onClick = {
+                            navController.navigate("goals")
+                        },
+                    )
+                    Text(text = "Goals")
+                }
             }
         }
     }
@@ -252,6 +250,15 @@ fun ContactItem(label: String, value: String) {
             Text(text = label, fontWeight = FontWeight.Bold)
             Text(text = value)
         }
+    }
+}
+fun getBmiColor(bmi: String): Color {
+    val bmiValue = bmi.toFloatOrNull()
+    return when {
+        bmiValue == null -> Color(0xFFa0a19f) // BMI bilinmiyorsa
+        bmiValue < 18.5 -> Color(0xFFc9d48a) // Düşük kilo
+        bmiValue <= 24.9 -> Color(0xFF8ad493) // Normal kilo
+        else -> Color(0xFFd48a8a) // Obezite
     }
 }
 @Preview(showBackground = true)

@@ -81,7 +81,7 @@ fun GoalsScreen(navController: NavController) {
                     Text(
                         buildAnnotatedString {
                             withStyle(style = SpanStyle(fontWeight = FontWeight.Light, color = Color.Black, fontSize = 20.sp)) {
-                                append("GOAL: ")
+                                append(" ")
                             }
                             withStyle(style = SpanStyle(fontWeight = FontWeight.Light, color = Color(0xFF325334))) {
                                 append(goal.first)
@@ -145,36 +145,47 @@ fun GoalsScreen(navController: NavController) {
             Spacer(modifier = Modifier.weight(1f))
 
             Row(
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 8.dp, end = 8.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(start = 8.dp)
             ) {
-                ImageButton(
-                    imagePainter = painterResource(id = R.drawable.profilepage),
-                    onClick = {
-                        navController.navigate("profile")
-                    }
-                )
-
-                ImageButton(
-                    imagePainter = painterResource(id = R.drawable.logo),
-                    onClick = {
-                        navController.navigate("chat")
-                    }
-                )
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                ImageButton(
-                    imagePainter = painterResource(id = R.drawable.goalspage),
-                    onClick = {
-                        navController.navigate("goals")
-                    },
-                    modifier = Modifier.size(120.dp),
-
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally // Bunu ekleyin
+                ) {
+                    ImageButton(
+                        imagePainter = painterResource(id = R.drawable.profilepage),
+                        onClick = {
+                            navController.navigate("profile")
+                        }
                     )
+                    Text(text = "Profile")
+
+                }
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally // Bunu ekleyin
+                ) {
+                    ImageButton(
+                        imagePainter = painterResource(id = R.drawable.logo),
+                        onClick = {
+                            navController.navigate("chat")
+                        }     )
+                    Text(text = "Chat")
+                }
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally // Bunu ekleyin
+                ) {
+
+                    ImageButton(
+                        imagePainter = painterResource(id = R.drawable.goalspage),
+                        onClick = {
+                            navController.navigate("goals")
+                        },
+                        modifier = Modifier.size(115.dp),
+                        )
+                    Text(text = "Goals")
+                }
             }
         }
 
