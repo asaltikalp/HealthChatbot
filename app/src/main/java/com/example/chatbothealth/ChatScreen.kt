@@ -5,10 +5,12 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -17,13 +19,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.rememberAsyncImagePainter
 import com.aallam.openai.api.BetaOpenAI
 import com.aallam.openai.api.chat.*
 import com.aallam.openai.api.model.ModelId
 import com.aallam.openai.client.OpenAI
 import com.example.chatbothealth.ui.theme.AppTheme
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
-
+data class UserProfile(
+    val username: String,
+    val profileImageUrl: String
+)
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun ChatScreen(navController: NavController) {
@@ -32,6 +40,22 @@ fun ChatScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
     val pastAssistantMessages = remember {
         mutableStateListOf<String>()
+    }
+    val userProfile = remember { mutableStateOf(UserProfile("", "")) }
+
+    // Firestore referansı
+    val db = FirebaseFirestore.getInstance()
+    val currentUser = FirebaseAuth.getInstance().currentUser
+
+    // Firestore'dan kullanıcı verilerini çekme
+    LaunchedEffect(key1 = Unit) {
+        currentUser?.email?.let { email ->
+            db.collection("users").document(email).get().addOnSuccessListener { document ->
+                val username = document.getString("username") ?: ""
+                val profileImageUrl = document.getString("profileImageUrl") ?: ""
+                userProfile.value = UserProfile(username, profileImageUrl)
+            }
+        }
     }
     AppTheme {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -54,9 +78,11 @@ fun ChatScreen(navController: NavController) {
                     MessageRow(
                         message = message,
                         isFromUser = message.isFromUser,
-                        userImageId = R.drawable.userprofile,
-                        assistantImageId = R.drawable.logo // Asistan için bir profil resmi tanımlamanız gerekir
+                        userProfileUrl = if (message.isFromUser) userProfile.value.profileImageUrl else "",
+                        assistantImageId = R.drawable.logo,
+                        username = if (message.isFromUser) userProfile.value.username else "Assistant"
                     )
+                    Text(text = "\n")
                 }
             }
 
@@ -91,7 +117,7 @@ fun ChatScreen(navController: NavController) {
                                 val response = callChatOpenAI(
                                     ChatOpenAIOptions(
                                         userMessage = textState.value,
-                                        systemMessage = "You are talking to a health coach. Provide helpful and relevant advice with bullet points. You may ask for personal details for a better response",
+                                        systemMessage = "You are a health coach. Provide helpful and relevant advice with bullet points. You may ask for personal details for a better response",
                                         assistantMessage = pastAssistantMessages.joinToString(
                                             separator = "\n"
                                         ),
@@ -117,7 +143,7 @@ fun ChatScreen(navController: NavController) {
             Row(
                 verticalAlignment = Alignment.Bottom,
                 horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 8.dp)
             ) {
@@ -142,7 +168,7 @@ fun ChatScreen(navController: NavController) {
                             navController.navigate("chat")
                         },
                         modifier = Modifier.size(115.dp),
-                        )
+                    )
                     Text(text = "Chat")
                 }
                 Column(
@@ -230,21 +256,39 @@ suspend fun callChatOpenAI(openAIOptions: ChatOpenAIOptions): String {
 }
 
 @Composable
-fun MessageRow(message: Message, isFromUser: Boolean, userImageId: Int, assistantImageId: Int) {
+fun MessageRow(
+    message: Message,
+    isFromUser: Boolean,
+    userProfileUrl: String, // Kullanıcı profil resmi URL'si
+    assistantImageId: Int, // Asistan profil resmi kaynak ID'si
+    username: String // Kullanıcı adı
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = if (isFromUser) Arrangement.Start else Arrangement.End // Mesajın yeri burada belirlenir
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = if (isFromUser) Arrangement.Start else Arrangement.End
     ) {
-        val imageId = if (isFromUser) userImageId else assistantImageId
+        val imagePainter = if (isFromUser) {
+            rememberAsyncImagePainter(userProfileUrl)
+        } else {
+            painterResource(id = assistantImageId)
+        }
+
         Image(
-            painter = painterResource(id = imageId),
+            painter = imagePainter,
             contentDescription = "Profil Resmi",
-            modifier = Modifier.size(40.dp)
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
         )
         Spacer(modifier = Modifier.width(8.dp))
         Column {
-            Text(text = if (isFromUser) "User" else "Assistant", fontWeight = FontWeight.Bold) // Mesajın kimden geldiği burada belirlenir
+            Text(
+                text = username,
+                fontWeight = FontWeight.Bold
+            )
             Text(text = message.content)
         }
     }

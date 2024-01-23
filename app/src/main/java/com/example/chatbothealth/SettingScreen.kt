@@ -113,17 +113,7 @@ fun SettingsScreen(navController: NavController) {
             label = { Text("Phone") },
             isError = phone.length != 10
         )
-//        OutlinedTextField(
-//            value = gender,
-//            onValueChange = { gender = it },
-//            label = { Text("Gender") },
-//            readOnly = true,
-//            trailingIcon = {
-//                IconButton(onClick = { expanded = true }) {
-//                    Icon(Icons.Filled.ArrowDropDown, "drop-down")
-//                }
-//            }
-//        )
+
         OutlinedTextField(
             value = gender,
             onValueChange = { gender = it },
