@@ -117,7 +117,7 @@ fun ChatScreen(navController: NavController) {
                                 val response = callChatOpenAI(
                                     ChatOpenAIOptions(
                                         userMessage = textState.value,
-                                        systemMessage = "You are a health coach. Provide helpful and relevant advice with bullet points. You may ask for personal details for a better response",
+                                        systemMessage = "You are a health coach. Provide helpful and relevant advice with bullet points. Keep it short. You may ask for personal details for a better response if needed",
                                         assistantMessage = pastAssistantMessages.joinToString(
                                             separator = "\n"
                                         ),

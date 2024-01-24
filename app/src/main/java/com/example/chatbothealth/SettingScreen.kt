@@ -18,6 +18,7 @@ import com.google.firebase.storage.FirebaseStorage
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.runtime.rememberCoroutineScope
@@ -25,6 +26,8 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
+import androidx.compose.ui.graphics.Color
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navController: NavController) {
@@ -61,7 +64,6 @@ fun SettingsScreen(navController: NavController) {
                     val downloadUri = task.result
                     onUrlReady(downloadUri.toString())
                 } else {
-                    // Hata işleme
                 }
             }
         }
@@ -146,7 +148,7 @@ fun SettingsScreen(navController: NavController) {
             value = height,
             onValueChange = {
                 height = it
-                bmi = calculateBMI()  // Boy girildiğinde BMI hesapla
+                bmi = calculateBMI()
             },
             label = { Text("Height (cm)") }
         )
@@ -160,11 +162,11 @@ fun SettingsScreen(navController: NavController) {
             onValueChange = { waterIntake = it },
             label = { Text("Daily Water Intake (glasses)") }
         )
-        Text("BMI: $bmi")  // BMI gösterimi
+        Text("BMI: $bmi")
 
         Button(
             onClick = {
-                if (phone.length == 10) {  // Telefon numarası doğru uzunluktaysa
+                if (phone.length == 10) {
                     currentUser?.email?.let { email ->
                         val userMap = mapOf(
                             "username" to username,
@@ -178,13 +180,11 @@ fun SettingsScreen(navController: NavController) {
                         )
                         db.collection("users").document(email).set(userMap)
                             .addOnSuccessListener {
-                                // Profil resmi URL'sini ayrı bir çağrıda güncelle
                                 if (profileImageUrl.isNotEmpty()) {
                                     db.collection("users").document(email)
                                         .update("profileImageUrl", profileImageUrl)
                                 }
 
-                                // Tüm alanları sıfırla
                                 username = ""
                                 phone = ""
                                 weight = ""
@@ -202,6 +202,15 @@ fun SettingsScreen(navController: NavController) {
             }
         ) {
             Text("Save All")
+        }
+        androidx.compose.material.Button(
+            onClick = { navController.navigate("login") },
+            colors = ButtonDefaults.buttonColors(
+                backgroundColor = Color(0xFF345323),
+                contentColor = Color.White
+            )
+        ) {
+            androidx.compose.material.Text("Logout")
         }
 
     }
