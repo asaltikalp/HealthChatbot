@@ -1,32 +1,33 @@
 package com.example.chatbothealth
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import java.util.UUID
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.ui.graphics.Color
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,12 +43,58 @@ fun SettingsScreen(navController: NavController) {
     val db = FirebaseFirestore.getInstance()
     var profileImageUrl by remember { mutableStateOf("") }
     var gender by remember { mutableStateOf("") }
+    var existingUserData by remember { mutableStateOf<Map<String, Any>?>(null) }
 
     var expanded by remember { mutableStateOf(false) }
     val genderOptions = listOf("Male", "Female", "Other")
 
     val coroutineScope = rememberCoroutineScope()
     val storageRef = FirebaseStorage.getInstance().reference
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    fun manageUserData(load: Boolean = true, update: Boolean = false) {
+        currentUser?.email?.let { email ->
+            if (load) {
+                db.collection("users").document(email).get().addOnSuccessListener { document ->
+                    document?.data?.let {
+                        existingUserData = it
+                        username = it["username"] as? String ?: ""
+                        phone = it["phone"] as? String ?: ""
+                        weight = it["weight"] as? String ?: ""
+                        height = it["height"] as? String ?: ""
+                        bloodType = it["bloodType"] as? String ?: ""
+                        waterIntake = it["waterIntake"] as? String ?: ""
+                        gender = it["gender"] as? String ?: ""
+                        profileImageUrl = it["profileImageUrl"] as? String ?: ""
+                    }
+                }
+            }
+
+            if (update) {
+                val updates = hashMapOf<String, Any>()
+                existingUserData?.let { existingData ->
+                    if (username != existingData["username"]) updates["username"] = username
+                    if (phone != existingData["phone"]) updates["phone"] = phone
+                    if (weight != existingData["weight"]) updates["weight"] = weight
+                    if (height != existingData["height"]) updates["height"] = height
+                    if (bloodType != existingData["bloodType"]) updates["bloodType"] = bloodType
+                    if (waterIntake != existingData["waterIntake"]) updates["waterIntake"] = waterIntake
+                    if (gender != existingData["gender"]) updates["gender"] = gender
+                    if (profileImageUrl != existingData["profileImageUrl"]) updates["profileImageUrl"] = profileImageUrl
+                }
+
+                if (updates.isNotEmpty()) {
+                    db.collection("users").document(email).update(updates)
+                        .addOnSuccessListener { coroutineScope.launch { snackbarHostState.showSnackbar("Bilgiler başarıyla güncellendi") } }
+                        .addOnFailureListener { error -> coroutineScope.launch { snackbarHostState.showSnackbar("Güncelleme başarısız: ${error.message}") } }
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        manageUserData()
+    }
 
     fun uploadImageToFirebaseStorage(imageUri: Uri, onUrlReady: (String) -> Unit) {
         val fileRef = storageRef.child("profileImages/${UUID.randomUUID()}")
@@ -164,45 +211,11 @@ fun SettingsScreen(navController: NavController) {
         )
         Text("BMI: $bmi")
 
-        Button(
-            onClick = {
-                if (phone.length == 10) {
-                    currentUser?.email?.let { email ->
-                        val userMap = mapOf(
-                            "username" to username,
-                            "phone" to phone,
-                            "gender" to gender,
-                            "weight" to weight,
-                            "height" to height,
-                            "bloodType" to bloodType,
-                            "waterIntake" to waterIntake,
-                            "bmi" to bmi
-                        )
-                        db.collection("users").document(email).set(userMap)
-                            .addOnSuccessListener {
-                                if (profileImageUrl.isNotEmpty()) {
-                                    db.collection("users").document(email)
-                                        .update("profileImageUrl", profileImageUrl)
-                                }
 
-                                username = ""
-                                phone = ""
-                                weight = ""
-                                height = ""
-                                bloodType = ""
-                                waterIntake = ""
-                                bmi = ""
-                                profileImageUrl = ""
-                            }
-                            .addOnFailureListener {
-                                // Hata işleme
-                            }
-                    }
-                }
-            }
-        ) {
+        Button(onClick = { manageUserData(update = true) }) {
             Text("Save All")
         }
+
         androidx.compose.material.Button(
             onClick = { navController.navigate("login") },
             colors = ButtonDefaults.buttonColors(
