@@ -38,13 +38,14 @@ class MainActivity : AppCompatActivity() {
             AppTheme {
                 val navController = rememberNavController()
 
-                NavHost(navController = navController, startDestination = "settings") {
+                NavHost(navController = navController, startDestination = "profile") {
                     composable("login") { LoginScreen(navController) }
                     composable("register") { RegisterScreen(navController) }
                     composable("chat") { ChatScreen(navController) }
                     composable("goals") { GoalsScreen(navController) }
                     composable("profile") { ProfileScreen(navController) }
                     composable("settings") { SettingsScreen(navController) }
+                    composable("stress") { StressScreen(navController) }
 
                 }
             }

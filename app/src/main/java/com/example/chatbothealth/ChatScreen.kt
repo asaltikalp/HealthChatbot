@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,6 +17,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -42,8 +45,73 @@ fun ChatScreen(navController: NavController) {
         mutableStateListOf<String>()
     }
     val userProfile = remember { mutableStateOf(UserProfile("", "")) }
+    var expandedMessages by remember { mutableStateOf(false) }
+    val messageOptions = listOf("How many calories should I consume daily and how can I track them?",
+        "What are the best exercises for someone with heart disease?",
+        "What are the unexpected benefits of reducing screen time before bed?",
+        "What types of foods should I eat to lower my cholesterol?",
+        "Can you suggest daily mindfulness practices to reduce anxiety?",
+        "How often should I check my blood pressure at home if I have hypertension?",
+        "What are some effective strategies for losing weight?",
+        "Can you recommend a healthy meal plan for someone with high cholesterol?",
+        "How many calories should I eat per day to maintain my current weight?",
+        "What are the benefits of regular physical activity?",
+        "Can you provide tips for managing stress and anxiety?",
+        "What are the symptoms of type 2 diabetes?",
+        "How can I improve my sleep quality?",
+        "What is a balanced diet for a vegetarian?",
+        "Are there any exercises recommended for lower back pain?",
+        "How often should I get a health check-up?",
+        "What are some natural remedies for high blood pressure?",
+        "How can I quit smoking effectively and permanently?",
+        "What vaccinations are recommended for adults?",
+        "How do I perform a breast self-exam?",
+        "What are the signs of dehydration, and how can I prevent it?",
+        "What should I do if I think I'm having an allergic reaction?",
+        "How can I increase my daily intake of fiber?",
+        "What are the best sources of omega-3 fatty acids?",
+        "Can you explain how to read a nutrition label?",
+        "What are the early signs of skin cancer?",
+        "What type of exercise routine is best for someone just starting out?",
+        "How many servings of fruits and vegetables should I eat each day?",
+        "What are some effective techniques to help manage stress?",
+        "Can you recommend strategies for improving heart health?",
+        "How can I tell if I'm getting enough vitamins from my diet?",
+        "What are the best ways to increase bone density?",
+        "How should I prepare for a marathon to avoid injuries?",
+        "What foods should I avoid if I have irritable bowel syndrome?",
+        "Can you suggest any exercises that are safe during pregnancy?",
+        "What are some signs that I might have a thyroid issue?",
+        "How can I improve my posture when working at a desk all day?",
+        "What are some low-impact exercises that are effective for weight loss?",
+        "How can I make sure I'm drinking enough water throughout the day?",
+        "What are the warning signs of diabetes that I should look out for?",
+        "How can I effectively lower my cholesterol through diet?",
+        "What steps can I take to prevent high blood pressure?",
+        "What are the most effective ways to quit smoking?",
+        "How can I help strengthen my immune system naturally?",
+        "What are some methods to help ensure a good night's sleep?",
+        "What type of fats are healthiest to cook with?",
+        "Is it better to exercise before or after meals?",
+        "What are the health benefits of switching to a vegetarian diet?",
+        "How can I incorporate more physical activity into my busy day?",
+        "What supplements should I consider to enhance my overall health?",
+        "How often should I perform self-exams for breast cancer detection?",
+        "What are the signs of dehydration, and how can I prevent it?",
+        "What should I do if I think I'm having an allergic reaction?",
+        "How do I manage pain during exercise without taking medication?",
+        "What strategies can help me maintain a healthy diet while traveling?",
+        "What are the best practices for calorie counting?",
+        "How can I stay motivated to continue a physical activity regimen?",
+        "What are the key nutrients I need if I'm considering a vegan diet?",
+        "How can I safely increase the intensity of my workouts?",
+        "What are some tips for eating well on a tight budget?",
+        "How can I tell if I need more vitamins in my diet?",
+        "What are the most effective methods to stop smoking?",
+        "What are the best ways to reduce stress naturally?",
+        "How often should adults receive vaccinations, and which are recommended?",
+        "What are common symptoms of common viruses, and how can I protect myself?")
 
-    // Firestore referansı
     val db = FirebaseFirestore.getInstance()
     val currentUser = FirebaseAuth.getInstance().currentUser
 
@@ -58,130 +126,137 @@ fun ChatScreen(navController: NavController) {
         }
     }
     AppTheme {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "Chat",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 30.sp
-                )
-                Spacer(modifier = Modifier.weight(1f))
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            LazyColumn(modifier = Modifier.weight(1f)) {
-                items(messages) { message ->
-                    MessageRow(
-                        message = message,
-                        isFromUser = message.isFromUser,
-                        userProfileUrl = if (message.isFromUser) userProfile.value.profileImageUrl else "",
-                        assistantImageId = R.drawable.logo,
-                        username = if (message.isFromUser) userProfile.value.username else "Assistant"
+        androidx.compose.material.Scaffold(
+            bottomBar = { MyBottomNavigation(navController) }  // Alt navigasyon çubuğu olarak MyBottomNavigation'ı kullan
+        ) { paddingValues ->
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Chat",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 30.sp
                     )
-                    Text(text = "\n")
+                    Spacer(modifier = Modifier
+                                .weight(1f)
+                                .padding(paddingValues)
+                    )
                 }
-            }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            )
-            {
-                OutlinedTextField(
-                    value = textState.value,
-                    onValueChange = { textState.value = it },
-                    label = { Text("Ask something...") },
-                    modifier = Modifier.weight(1f)
+                Spacer(modifier = Modifier.height(32.dp))
+
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    items(messages) { message ->
+                        MessageRow(
+                            message = message,
+                            isFromUser = message.isFromUser,
+                            userProfileUrl = if (message.isFromUser) userProfile.value.profileImageUrl else "",
+                            assistantImageId = R.drawable.logo,
+                            username = if (message.isFromUser) userProfile.value.username else "Assistant"
+                        )
+                        Text(text = "\n")
+                    }
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.weight(0.1f))
-
-                Button(
-                    modifier = Modifier.height(48.dp),
-                    onClick = {
-                        if (textState.value.isNotBlank()) {
-                            messages.add(
-                                Message(
-                                    textState.value,
-                                    true, // Kullanıcıdan gelen mesaj
-                                    "User",
-                                    R.drawable.userprofile
+                {
+                    ExposedDropdownMenuBox(
+                        expanded = expandedMessages,
+                        onExpandedChange = { expandedMessages = !expandedMessages }
+                    ) {
+                        TextField(
+                            value = textState.value,
+                            onValueChange = { textState.value = it },
+                            label = { Text("Select a message") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedMessages) },
+                            colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                            modifier = Modifier.width(300.dp).menuAnchor()  // TextField'ın genişliğini sabitle
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandedMessages,
+                            onDismissRequest = { expandedMessages = false }
+                        ) {
+                            // Filtrelenen mesajları göster
+                            val filteredMessages = messageOptions.filter { it.contains(textState.value, ignoreCase = true) }
+                            filteredMessages.forEach { message ->
+                                DropdownMenuItem(
+                                    onClick = {
+                                        textState.value = message
+                                        expandedMessages = false
+                                    },
+                                    text = { Text(message) }
                                 )
-                            )
-                            pastAssistantMessages.add(textState.value)  // Update the conversation history
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.weight(0.1f))
 
-                            scope.launch {
-                                val response = callChatOpenAI(
-                                    ChatOpenAIOptions(
-                                        userMessage = textState.value,
-                                        systemMessage = "You are a health coach. Provide helpful and relevant advice with bullet points. Keep it short. You may ask for personal details for a better response if needed",
-                                        assistantMessage = pastAssistantMessages.joinToString(
-                                            separator = "\n"
-                                        ),
-                                        maxToken = 100
-                                    )
-                                )
+                    Button(
+                        modifier = Modifier.height(48.dp),
+                        onClick = {
+                            if (textState.value.isNotBlank()) {
                                 messages.add(
                                     Message(
-                                        response,
-                                        false, // Asistandan gelen mesaj
-                                        "Assistant",
-                                        R.drawable.logo // Asistan için profil resmi
+                                        textState.value,
+                                        true, // Kullanıcıdan gelen mesaj
+                                        "User",
+                                        R.drawable.userprofile
                                     )
                                 )
-                                pastAssistantMessages.add(response)  // Update the conversation history with the assistant's response
+                                pastAssistantMessages.add(textState.value)  // Update the conversation history
+
+                                scope.launch {
+                                    val response = callChatOpenAI(
+                                        ChatOpenAIOptions(
+                                            userMessage = textState.value,
+                                            systemMessage = "You are a health coach. Provide helpful and relevant advice with bullet points. Keep it short. You may ask for personal details for a better response if needed. Don't leave the response unfinished.",
+                                            assistantMessage = pastAssistantMessages.joinToString(
+                                                separator = "\n"
+                                            ),
+                                            maxToken = 100
+                                        )
+                                    )
+                                    messages.add(
+                                        Message(
+                                            response,
+                                            false, // Asistandan gelen mesaj
+                                            "Assistant",
+                                            R.drawable.logo // Asistan için profil resmi
+                                        )
+                                    )
+                                    pastAssistantMessages.add(response)  // Update the conversation history with the assistant's response
+                                }
+                                textState.value = ""
                             }
-                            textState.value = ""
-                        }
-                    }) {
-                    Text("Send")
+                        }) {
+                        Text("Send")
+                    }
                 }
-            }
-            Row(
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.dp)
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally // Bunu ekleyin
-                ) {
-                    ImageButton(
-                        imagePainter = painterResource(id = R.drawable.profilepage),
-                        onClick = {
-                            navController.navigate("profile")
-                        }
-                    )
-                    Text(text = "Profile")
-
-                }
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally // Bunu ekleyin
-                ) {
-                    ImageButton(
-                        imagePainter = painterResource(id = R.drawable.logo),
-                        onClick = {
-                            navController.navigate("chat")
-                        },
-                        modifier = Modifier.size(115.dp),
-                    )
-                    Text(text = "Chat")
-                }
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally // Bunu ekleyin
+                Row(
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 8.dp)
                 ) {
 
-                    ImageButton(
-                        imagePainter = painterResource(id = R.drawable.goalspage),
-                        onClick = {
-                            navController.navigate("goals")
-                        },
-                    )
-                    Text(text = "Goals")
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        ImageButton(
+                            imagePainter = painterResource(id = R.drawable.logo),
+                            onClick = {
+                                navController.navigate("chat")
+                            },
+                            modifier = Modifier.size(65.dp),
+                        )
+                        Text(text = "Chat")
+                    }
                 }
             }
         }
@@ -296,7 +371,6 @@ fun MessageRow(
 @Preview(showBackground = true)
 @Composable
 fun ChatScreenPreview() {
-    // Önizleme için geçici NavController oluştur
     val navController = rememberNavController()
     AppTheme {
         ChatScreen(navController)

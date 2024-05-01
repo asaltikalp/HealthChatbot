@@ -68,6 +68,9 @@ fun RegisterScreen(navController: NavController) {
                 Log.d("FirebaseAuth", "Passwords do not match")
             }
         },
+            modifier = Modifier
+                .padding(start = 40.dp, end = 40.dp)
+                .fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
                 backgroundColor = Color(0xFF345323),
                 contentColor = Color.White )) {
@@ -75,6 +78,9 @@ fun RegisterScreen(navController: NavController) {
         }
         Spacer(modifier = Modifier.height(8.dp))
         Button(onClick = { navController.navigate("login") },
+            modifier = Modifier
+                .padding(start = 40.dp, end = 40.dp)
+                .fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
                 backgroundColor = Color(0xFF345323),
                 contentColor = Color.White )) {

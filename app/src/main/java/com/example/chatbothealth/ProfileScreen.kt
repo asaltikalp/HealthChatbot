@@ -1,13 +1,17 @@
 package com.example.chatbothealth
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Stream
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -20,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -30,7 +35,6 @@ import com.example.chatbothealth.ui.theme.AppTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import coil.compose.rememberAsyncImagePainter
-
 
 @Composable
 fun ProfileScreen(navController: NavController) {
@@ -66,172 +70,154 @@ fun ProfileScreen(navController: NavController) {
         }
     }
 
-
     AppTheme {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            // Profile Image and Name
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "Profile",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 30.sp
-                )
-                Spacer(modifier = Modifier.weight(2f))
-
-                IconButton(onClick = { navController.navigate("settings") }) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = "Settings"
-                    )
-                }            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (userProfileImageUrl.isNotEmpty()) {
-                    Image(
-                        painter = rememberAsyncImagePainter(userProfileImageUrl),
-                        contentDescription = "Profile Photo",
-                        modifier = Modifier
-                            .size(80.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
-                    )
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Column {
-                    Row {
-                        ContactItem("Hello \uD83D\uDC4B ", userName)
-
-                    }
-                }
-                   }
-            ContactItem("Email ", userEmail)
-            ContactItem("Phone ", userPhone)
-
-            Spacer(modifier = Modifier.height(45.dp))
-            // Contact Information
+        androidx.compose.material.Scaffold(
+            bottomBar = { MyBottomNavigation(navController) }
+        ) { paddingValues ->
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxSize()
+                    .padding(16.dp)
             ) {
-                Text(
-                    text = "Health Information",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                data class HealthInfo(
-                    val text: String,
-                    val iconId: Int,
-                    val backgroundColor: Color // Renk özelliğini ekleyin
-                )
-                // healthInfos listesini güncelle
-                val healthInfos = listOf(
-                    HealthInfo("${userWeight} kg", R.drawable.weight, Color(0xFF8ad493)),
-                    HealthInfo("${userHeight} cm", R.drawable.height, Color(0xFF8ad493)),
-                    HealthInfo(userBMI, R.drawable.bmi, getBmiColor(userBMI)),
-                    HealthInfo(userBloodType, R.drawable.blood, Color(0xFF8ad493)),
-                    HealthInfo("$userWaterIntake Glass of Water", R.drawable.water, Color(0xFF8ad493)),
-                    HealthInfo(" $userGender", R.drawable.gender, Color(0xFF8ad493))
-                )
-                Spacer(modifier = Modifier.height(32.dp))
-
-                LazyRow(
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        .padding(paddingValues)
                 ) {
-                    items(healthInfos) { healthInfo ->
-                        Card(
+                    Text(
+                        text = "Profile",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 30.sp
+                    )
+                    Spacer(modifier = Modifier.weight(2f))
+
+                    IconButton(onClick = { navController.navigate("settings") }) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings"
+                        )
+                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (userProfileImageUrl.isNotEmpty()) {
+                        Image(
+                            painter = rememberAsyncImagePainter(userProfileImageUrl),
+                            contentDescription = "Profile Photo",
                             modifier = Modifier
-                                .width(200.dp)
-                                .height(100.dp),
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(healthInfo.backgroundColor)
-                                    .padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = healthInfo.iconId),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(48.dp)
-                                )
-                                Spacer(modifier = Modifier.width(16.dp))
-                                Text(
-                                    text = healthInfo.text,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                )
-                            }
+                                .size(80.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Row {
+                            ContactItem("Hello \uD83D\uDC4B ", userName)
+
                         }
                     }
                 }
-            }
+                ContactItem("Email ", userEmail)
+                ContactItem("Phone ", userPhone)
 
+                Spacer(modifier = Modifier.height(36.dp))
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            Row(
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.dp)
-            ) {
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally // Bunu ekleyin
-                ) {
-                    ImageButton(
-                        imagePainter = painterResource(id = R.drawable.profilepage),
-                        onClick = {
-                            navController.navigate("profile")
-                        },
-                        modifier = Modifier.size(115.dp),
-                        )
-                    Text(text = "Profile")
-
-                }
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally // Bunu ekleyin
-                ) {
-                    ImageButton(
-                        imagePainter = painterResource(id = R.drawable.logo),
-                        onClick = {
-                            navController.navigate("chat")
-                        }                   )
-                    Text(text = "Chat")
-                }
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally // Bunu ekleyin
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 
-                    ImageButton(
-                        imagePainter = painterResource(id = R.drawable.goalspage),
-                        onClick = {
-                            navController.navigate("goals")
-                        },
+                    Text(
+                        text = "Health Information",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
                     )
-                    Text(text = "Goals")
+
+                    data class HealthInfo(
+                        val text: String,
+                        val iconId: Int,
+                        val backgroundColor: Color
+                    )
+                    // healthInfos listesini güncelle
+                    val healthInfos = listOf(
+                        HealthInfo(userBMI, R.drawable.bmi, getBmiColor(userBMI)),
+                        HealthInfo(
+                            "$userWaterIntake Glasses of Water",
+                            R.drawable.water,
+                            getWaterColor(userWaterIntake)
+                        ),
+                        HealthInfo("$userWeight kg", R.drawable.weight, Color(0xFF8ad493)),
+                        HealthInfo("$userHeight cm", R.drawable.height, Color(0xFF8ad493)),
+                        HealthInfo(userBloodType, R.drawable.blood, Color(0xFF8ad493)),
+                        HealthInfo(" $userGender", R.drawable.gender, Color(0xFF8ad493))
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    LazyRow(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(healthInfos) { healthInfo ->
+                            Card(
+                                modifier = Modifier
+                                    .width(250.dp)
+                                    .height(150.dp),
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(healthInfo.backgroundColor)
+                                        .padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = healthInfo.iconId),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(48.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(32.dp))
+                                    Text(
+                                        text = healthInfo.text,
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.weight(0.1f))
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = 5.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        item {
+                            Text(
+                                text = "Find out your stress level.",
+                                modifier = Modifier
+                                    .clickable {
+                                        navController.navigate("stress")
+                                        println("Text was clicked!")
+                                    },
+                                fontSize = 16.sp,
+                            )
+                            ImageButton(
+                                imagePainter = painterResource(id=R.drawable.stress),
+                                onClick = { navController.navigate("stress") },
+                                modifier = Modifier
+                                    .size(130.dp)
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -261,6 +247,20 @@ fun getBmiColor(bmi: String): Color {
         else -> Color(0xFFd48a8a) // Obezite
     }
 }
+fun getWaterColor(userWaterIntake: String): Color {
+    val waterInTakeValue = userWaterIntake.toFloatOrNull()
+    Log.d("Debug", "Water intake value: $waterInTakeValue")
+    return when {
+        waterInTakeValue == null -> {
+            Log.d("Debug", "Water intake is null")
+            Color.LightGray // bilinmiyorsa
+        }
+        waterInTakeValue < 13 -> Color(0xFFd48a8a) // Düşük
+        waterInTakeValue <= 18 -> Color(0xFF8ad493) // Normal
+        else -> Color(0xFFd48a8a) // Yuksek
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun ProfileScreenPreview() {
