@@ -5,20 +5,16 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,7 +37,6 @@ fun GoalsScreen(navController: NavController) {
     var daysInput by remember { mutableStateOf("") }
     var expandedGoal by remember { mutableStateOf(false) }
     var expandedDays by remember { mutableStateOf(false) }
-
     val goalsOptions = listOf("Walk 10,000 steps every day",
         "Run 5 kilometers three times a week",
         "Perform strength training four times a week",
@@ -58,6 +53,7 @@ fun GoalsScreen(navController: NavController) {
         "Check my blood pressure daily",
         "Take my prescribed medications on time every day")
     val daysOptions = List(12) { 30 + it * 30 }
+    val totalDays = daysInput.toIntOrNull() ?: 1
 
     var goalsList by remember { mutableStateOf(listOf<Pair<String, Long>>()) }
 
@@ -73,8 +69,7 @@ fun GoalsScreen(navController: NavController) {
                 }
         }
     }
-
-    val hourglassEmoji = "\u231B"
+    val scrollState = rememberScrollState()
     AppTheme {
         androidx.compose.material.Scaffold(
             bottomBar = { MyBottomNavigation(navController) }  // Alt navigasyon çubuğu olarak MyBottomNavigation'ı kullan
@@ -97,82 +92,26 @@ fun GoalsScreen(navController: NavController) {
                         fontWeight = FontWeight.Bold,
                         fontSize = 30.sp
                     )
-                    Spacer(modifier = Modifier.weight(1f))
+                    Spacer(modifier = Modifier.weight(0.1f))
                 }
-                Spacer(modifier = Modifier.height(32.dp))
-
-                LazyColumn {
-                    items(goalsList) { goal ->
-                        Text(
-                            buildAnnotatedString {
-                                withStyle(
-                                    style = SpanStyle(
-                                        fontWeight = FontWeight.Normal,
-                                        color = Color.Black,
-                                        fontSize = 20.sp
-                                    )
-                                ) {
-                                    append(" ")
-                                }
-                                withStyle(
-                                    style = SpanStyle(
-                                        fontWeight = FontWeight.Normal,
-                                        color = Color(0xFF325334)
-                                    )
-                                ) {
-                                    append(goal.first)
-                                }
-                                append(" \nLAST ")
-                                withStyle(
-                                    style = SpanStyle(
-                                        fontWeight = FontWeight.Normal,
-                                        color = Color(0xFF325334)
-                                    )
-                                ) {
-                                    append(goal.second.toString())
-                                }
-                                withStyle(
-                                    style = SpanStyle(
-                                        fontWeight = FontWeight.Normal,
-                                        color = Color(0xFF325334),
-                                        shadow = Shadow(
-                                            Color.Gray,
-                                            offset = Offset(2f, 2f),
-                                            blurRadius = 5f
-                                        )
-                                    )
-                                ) {
-                                    append(hourglassEmoji + " DAYS")
-                                }
-                            },
-                            modifier = Modifier.padding(8.dp),
-                            fontSize = 17.sp,
-                            textAlign = TextAlign.Center
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-
                 ExposedDropdownMenuBox(
                     expanded = expandedGoal,
                     onExpandedChange = { expandedGoal = !expandedGoal }
                 ) {
                     TextField(
                         value = goalInput,
-                        onValueChange = { },
+                        onValueChange = { goalInput = it },
                         label = { Text("Select your goal") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedGoal) },
                         colors = ExposedDropdownMenuDefaults.textFieldColors(),
-                        modifier = Modifier.menuAnchor()
+                        modifier = Modifier.width(300.dp).menuAnchor()
                     )
                     ExposedDropdownMenu(
                         expanded = expandedGoal,
                         onDismissRequest = { expandedGoal = false }
                     ) {
-                        goalsOptions.forEach { goal ->
+                        val filteredMessages = goalsOptions.filter { it.contains(goalInput, ignoreCase = true) }
+                        filteredMessages.forEach { goal ->
                             DropdownMenuItem(
                                 onClick = {
                                     goalInput = goal
@@ -183,7 +122,6 @@ fun GoalsScreen(navController: NavController) {
                         }
                     }
                 }
-
                 // Gün sayısı için Dropdown Menu
                 ExposedDropdownMenuBox(
                     expanded = expandedDays,
@@ -195,9 +133,9 @@ fun GoalsScreen(navController: NavController) {
                         label = { Text("Select days") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDays) },
                         colors = ExposedDropdownMenuDefaults.textFieldColors(),
-                        modifier = Modifier.menuAnchor(),
+                        modifier = Modifier.width(300.dp).menuAnchor(),
                         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                        )
+                    )
                     ExposedDropdownMenu(
                         expanded = expandedDays,
                         onDismissRequest = { expandedDays = false }
@@ -213,7 +151,7 @@ fun GoalsScreen(navController: NavController) {
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Button(onClick = {
                     val targetDate = LocalDate.now().plusDays(daysInput.toLongOrNull() ?: 0L)
@@ -229,13 +167,52 @@ fun GoalsScreen(navController: NavController) {
                             )
                         )
                     }
-                    // TextField'ları sıfırla
                     goalInput = ""
                     daysInput = ""
                 }) {
                     Text("Save The Goal")
                 }
                 Spacer(modifier = Modifier.weight(1f))
+                LazyColumn (modifier = Modifier.padding(8.dp, bottom = 68.dp)){
+                    items(goalsList) { goal ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "⦿ ${goal.first}",
+                                modifier = Modifier.weight(1f),
+                                fontSize = 18.sp,
+                                color = Color(0xFF325334)
+                            )
+                            // Circular progress indicator showing the days remaining as a percentage
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .padding(8.dp)
+                            ) {
+                                CircularProgressIndicator(
+                                    progress = {
+                                        if (totalDays > 0) goal.second.toFloat() / totalDays else 0f
+                                    },
+                                    color = Color.Green,
+                                    strokeWidth = 4.dp
+                                )
+                                Text(
+                                    text = "${goal.second}",
+                                    fontSize = 16.sp,
+                                    color = Color.Black
+                                )
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+
+
             }
 
         }

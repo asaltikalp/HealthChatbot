@@ -12,7 +12,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.chatbothealth.R
-import com.example.chatbothealth.ui.theme.AppTheme
 import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff

@@ -1,4 +1,5 @@
 package com.example.chatbothealth
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -34,6 +35,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.chatbothealth.ui.theme.AppTheme
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import java.time.format.TextStyle
 
 data class Question(
@@ -57,6 +60,7 @@ val questions = listOf(
     Question(12, "12. I can achieve my goals even though there are obstacles."),
     )
 val darkGreen = 0xFF325334
+
 @Composable
 fun QuestionItem(
     question: Question,
@@ -92,6 +96,8 @@ fun StressScreen(navController: NavController) {
     val showDialog = remember { mutableStateOf(false) }
     val userResponses = remember { mutableMapOf<Int, String>() }
     val stressResult = remember { mutableStateOf(Pair("", 0.0)) } // Pair to hold stress level and percentage
+    val db = FirebaseFirestore.getInstance()
+    val currentUser = FirebaseAuth.getInstance().currentUser
 
     Scaffold(
         bottomBar = { MyBottomNavigation(navController) }  // Alt navigasyon çubuğu olarak MyBottomNavigation'ı kullan
@@ -129,6 +135,15 @@ fun StressScreen(navController: NavController) {
                 onClick = {
                     stressResult.value = calculateStressLevel(userResponses)
                     showDialog.value = true
+                    // Save the result to Firestore
+                    currentUser?.email?.let { email ->
+                        db.collection("users").document(email).update(
+                            mapOf(
+                                "lastStressLevel" to stressResult.value.first,
+                                "lastStressPercentage" to stressResult.value.second
+                            )
+                        )
+                    }
                 },
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = Color.DarkGray
@@ -189,9 +204,14 @@ fun calculateStressLevel(responses: Map<Int, String>): Pair<String, Double> {
     val maxPossibleScore = 36 // 12 soru x en yüksek 3 puan
     val stressPercent = (totalScore.toDouble() / maxPossibleScore) * 100.0
     val stressLevel = when {
-        stressPercent <= 33 -> "Low"
-        stressPercent <= 66 -> "Normal"
-        else -> "High"
+        stressPercent <= 25 -> "Low\n" +
+                "\nYou handle stress well. A moderate level of stress can help you focus and get more from work and other pursuits. Don't forget to continue practicing healthy stress management techniques to maintain this balance."
+        stressPercent <= 50 -> "Normal \n" +
+                "\nYou experience occasional stress, which is typical in everyday life. You generally manage it effectively and it doesn't significantly impact your daily functioning. Remember to prioritize self-care and relaxation activities to keep your stress levels in check."
+        stressPercent <= 75 -> "Medium\n" +
+                "\nYou often encounter stressors that can sometimes feel overwhelming, but you usually find ways to cope and adapt. However, it's important to monitor your stress levels to prevent them from negatively affecting your well-being. Consider seeking support from friends, family, or a therapist if needed.\n"
+        else -> "High\n" +
+                "\nYou frequently experience high levels of stress, which may impair your ability to function effectively in various areas of life. It's crucial to seek support and implement strategies to manage stress and prevent burnout. Remember, taking small steps towards stress reduction can make a big difference in your overall well-being.\n"
     }
     return Pair(stressLevel, stressPercent)
 }

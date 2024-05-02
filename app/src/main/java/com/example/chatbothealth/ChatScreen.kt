@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,7 +15,6 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -32,6 +29,12 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 data class UserProfile(
+    val age: String,
+    val weight: String,
+    val height: String,
+    val gender: String,
+    val bloodType: String,
+    val waterIntake: String,
     val username: String,
     val profileImageUrl: String
 )
@@ -41,12 +44,11 @@ fun ChatScreen(navController: NavController) {
     val messages = remember { mutableStateListOf<Message>() }
     val textState = remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
-    val pastAssistantMessages = remember {
-        mutableStateListOf<String>()
-    }
-    val userProfile = remember { mutableStateOf(UserProfile("", "")) }
+
+    val userProfile = remember { mutableStateOf(UserProfile("","","","","","","", "")) }
     var expandedMessages by remember { mutableStateOf(false) }
-    val messageOptions = listOf("How many calories should I consume daily and how can I track them?",
+    val messageOptions = listOf("What do you know about me?",
+        "How many calories should I consume daily and how can I track them?",
         "What are the best exercises for someone with heart disease?",
         "What are the unexpected benefits of reducing screen time before bed?",
         "What types of foods should I eat to lower my cholesterol?",
@@ -116,20 +118,33 @@ fun ChatScreen(navController: NavController) {
     val currentUser = FirebaseAuth.getInstance().currentUser
 
     // Firestore'dan kullanıcı verilerini çekme
-    LaunchedEffect(key1 = Unit) {
+    LaunchedEffect(key1 = currentUser) {
         currentUser?.email?.let { email ->
             db.collection("users").document(email).get().addOnSuccessListener { document ->
-                val username = document.getString("username") ?: ""
-                val profileImageUrl = document.getString("profileImageUrl") ?: ""
-                userProfile.value = UserProfile(username, profileImageUrl)
+                val age = document.getString("age") ?: "N/A"
+                val weight = document.getString("weight") ?: "N/A"
+                val height = document.getString("height") ?: "N/A"
+                val gender = document.getString("gender") ?: "N/A"
+                val bloodType = document.getString("bloodType") ?: "N/A"
+                val waterIntake = document.getString("waterIntake") ?: "N/A"
+                val username = document.getString("username") ?: "N/A"
+                val profileImageUrl = document.getString("profileImageUrl") ?: "N/A"
+                userProfile.value = UserProfile(age, weight, height, gender,bloodType, waterIntake, username, profileImageUrl)
+                Log.d("ChatScreen", "Profile data loaded: $userProfile")
+            }.addOnFailureListener { exception ->
+                Log.e("ChatScreen", "Error fetching user data", exception)
             }
         }
     }
+    val pastAssistantMessages = remember(userProfile.value) {
+        mutableStateListOf("Hi, my username is ${userProfile.value.username}, my age is ${userProfile.value.age}, my height is ${userProfile.value.height}, my weight is ${userProfile.value.weight}, my gender is  ${userProfile.value.gender}, my blood type is  ${userProfile.value.bloodType}, my daily water in take is  ${userProfile.value.waterIntake}. Please prioritise this while responding me.")
+    }
+
     AppTheme {
         androidx.compose.material.Scaffold(
             bottomBar = { MyBottomNavigation(navController) }  // Alt navigasyon çubuğu olarak MyBottomNavigation'ı kullan
         ) { paddingValues ->
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(16.dp, bottom = 100.dp)) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
@@ -159,7 +174,6 @@ fun ChatScreen(navController: NavController) {
                         Text(text = "\n")
                     }
                 }
-
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
@@ -175,13 +189,12 @@ fun ChatScreen(navController: NavController) {
                             label = { Text("Select a message") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedMessages) },
                             colors = ExposedDropdownMenuDefaults.textFieldColors(),
-                            modifier = Modifier.width(300.dp).menuAnchor()  // TextField'ın genişliğini sabitle
+                            modifier = Modifier.width(300.dp).menuAnchor()
                         )
                         ExposedDropdownMenu(
                             expanded = expandedMessages,
                             onDismissRequest = { expandedMessages = false }
                         ) {
-                            // Filtrelenen mesajları göster
                             val filteredMessages = messageOptions.filter { it.contains(textState.value, ignoreCase = true) }
                             filteredMessages.forEach { message ->
                                 DropdownMenuItem(
@@ -214,11 +227,11 @@ fun ChatScreen(navController: NavController) {
                                     val response = callChatOpenAI(
                                         ChatOpenAIOptions(
                                             userMessage = textState.value,
-                                            systemMessage = "You are a health coach. Provide helpful and relevant advice with bullet points. Keep it short. You may ask for personal details for a better response if needed. Don't leave the response unfinished.",
+                                            systemMessage = "You are a health coach. Provide helpful and relevant advice with bullet points. Keep sentences short and don't leave the sentences unfinished. You may ask for personal details for a better response if needed.",
                                             assistantMessage = pastAssistantMessages.joinToString(
                                                 separator = "\n"
                                             ),
-                                            maxToken = 100
+                                            maxToken = 110
                                         )
                                     )
                                     messages.add(
@@ -237,27 +250,7 @@ fun ChatScreen(navController: NavController) {
                         Text("Send")
                     }
                 }
-                Row(
-                    verticalAlignment = Alignment.Bottom,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 8.dp)
-                ) {
 
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        ImageButton(
-                            imagePainter = painterResource(id = R.drawable.logo),
-                            onClick = {
-                                navController.navigate("chat")
-                            },
-                            modifier = Modifier.size(65.dp),
-                        )
-                        Text(text = "Chat")
-                    }
-                }
             }
         }
     }

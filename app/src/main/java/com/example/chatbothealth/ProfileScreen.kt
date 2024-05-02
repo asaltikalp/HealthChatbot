@@ -5,13 +5,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Stream
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -24,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -42,6 +39,7 @@ fun ProfileScreen(navController: NavController) {
     val userEmail = currentUser?.email ?: "No Email"
     var userName by remember { mutableStateOf("Loading...") }
     var userPhone by remember { mutableStateOf("Loading...") }
+    var userAge by remember { mutableStateOf("Loading...") }
     var userWeight by remember { mutableStateOf("Loading...") }
     var userHeight by remember { mutableStateOf("Loading...") }
     var userBloodType by remember { mutableStateOf("Loading...") }
@@ -49,6 +47,7 @@ fun ProfileScreen(navController: NavController) {
     var userBMI by remember { mutableStateOf("Loading...") }
     var userProfileImageUrl by remember { mutableStateOf("") }
     var userGender by remember { mutableStateOf("Loading...") }
+    //var userStressLevel by remember { mutableStateOf("Loading...") }
 
     LaunchedEffect(currentUser) {
         currentUser?.let { user ->
@@ -58,6 +57,7 @@ fun ProfileScreen(navController: NavController) {
                 if (document != null) {
                     userName = document.getString("username") ?: "No Username"
                     userPhone = document.getString("phone") ?: "No Phone Number"
+                    userAge = document.getString("age") ?: "No Age"
                     userWeight = document.getString("weight") ?: "No Weight"
                     userHeight = document.getString("height") ?: "No Height"
                     userBloodType = document.getString("bloodType") ?: "No Blood Type"
@@ -65,6 +65,7 @@ fun ProfileScreen(navController: NavController) {
                     userBMI = document.getString("bmi") ?: "No BMI"
                     userProfileImageUrl = document.getString("profileImageUrl") ?: ""
                     userGender = document.getString("gender") ?: "Not Specified"
+                    //userStressLevel = document.getString("lastStressPercentage") ?: "Not Specified"
                 }
             }
         }
@@ -83,7 +84,7 @@ fun ProfileScreen(navController: NavController) {
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(paddingValues)
+                        .padding(16.dp)
                 ) {
                     Text(
                         text = "Profile",
@@ -95,7 +96,7 @@ fun ProfileScreen(navController: NavController) {
                     IconButton(onClick = { navController.navigate("settings") }) {
                         Icon(
                             imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings"
+                            contentDescription = "Settings",
                         )
                     }
                 }
@@ -105,7 +106,6 @@ fun ProfileScreen(navController: NavController) {
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (userProfileImageUrl.isNotEmpty()) {
                         Image(
                             painter = rememberAsyncImagePainter(userProfileImageUrl),
                             contentDescription = "Profile Photo",
@@ -113,18 +113,18 @@ fun ProfileScreen(navController: NavController) {
                                 .size(80.dp)
                                 .clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.primary)
+                                .padding(paddingValues)
                         )
-                    }
+
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
                         Row {
                             ContactItem("Hello \uD83D\uDC4B ", userName)
-
                         }
                     }
                 }
-                ContactItem("Email ", userEmail)
-                ContactItem("Phone ", userPhone)
+                ContactItem("", userEmail)
+                ContactItem("", userPhone)
 
                 Spacer(modifier = Modifier.height(36.dp))
 
@@ -148,16 +148,14 @@ fun ProfileScreen(navController: NavController) {
                     // healthInfos listesini güncelle
                     val healthInfos = listOf(
                         HealthInfo(userBMI, R.drawable.bmi, getBmiColor(userBMI)),
-                        HealthInfo(
-                            "$userWaterIntake Glasses of Water",
-                            R.drawable.water,
-                            getWaterColor(userWaterIntake)
-                        ),
+                        HealthInfo("$userWaterIntake Glasses of Water", R.drawable.water, getWaterColor(userWaterIntake)),
                         HealthInfo("$userWeight kg", R.drawable.weight, Color(0xFF8ad493)),
                         HealthInfo("$userHeight cm", R.drawable.height, Color(0xFF8ad493)),
                         HealthInfo(userBloodType, R.drawable.blood, Color(0xFF8ad493)),
-                        HealthInfo(" $userGender", R.drawable.gender, Color(0xFF8ad493))
-                    )
+                        HealthInfo(" $userGender", R.drawable.gender, Color(0xFF8ad493)),
+                        HealthInfo(" $userAge years old", R.drawable.yearsold, Color(0xFF8ad493)),
+                        //HealthInfo("Stress Level $userStressLevel", R.drawable.gender, Color(0xFF8ad493))
+                        )
                     Spacer(modifier = Modifier.height(20.dp))
                     LazyRow(
                         modifier = Modifier
@@ -193,31 +191,37 @@ fun ProfileScreen(navController: NavController) {
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.weight(0.1f))
-                    LazyColumn(
+                    Spacer(modifier = Modifier.width(16.dp))
+                }
+                Row(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(top = 5.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
                     ) {
-                        item {
-                            Text(
-                                text = "Find out your stress level.",
-                                modifier = Modifier
-                                    .clickable {
-                                        navController.navigate("stress")
-                                        println("Text was clicked!")
-                                    },
-                                fontSize = 16.sp,
-                            )
-                            ImageButton(
-                                imagePainter = painterResource(id=R.drawable.stress),
-                                onClick = { navController.navigate("stress") },
-                                modifier = Modifier
-                                    .size(130.dp)
-                            )
-                        }
-                    }
+                    ImageButton(
+                        imagePainter = painterResource(id=R.drawable.stress),
+                        onClick = { navController.navigate("stress") },
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape)
+                    )
+
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ){
+                  Text(
+                        text = "Stress Test",
+                        modifier = Modifier
+                            .clickable {
+                                navController.navigate("stress")
+                            }
+                            .padding(bottom = 8.dp)
+                        ,
+                        fontSize = 18.sp,
+                    )
                 }
             }
         }
@@ -260,7 +264,15 @@ fun getWaterColor(userWaterIntake: String): Color {
         else -> Color(0xFFd48a8a) // Yuksek
     }
 }
-
+//fun getStressColor(stressLevel: String): Color {
+//    val stressLevelValue = stressLevel.toFloatOrNull()
+//    return when {
+//        stressLevelValue == null -> Color(0xFFa0a19f) // NA
+//        stressLevelValue < 33 -> Color(0xFFc9d48a) // Low
+//        stressLevelValue <= 66 -> Color(0xFF8ad493) // Normal
+//        else -> Color(0xFFd48a8a) // High
+//    }
+//}
 @Preview(showBackground = true)
 @Composable
 fun ProfileScreenPreview() {

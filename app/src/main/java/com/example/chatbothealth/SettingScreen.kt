@@ -8,6 +8,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,6 +33,7 @@ import java.util.UUID
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navController: NavController) {
+    val ages = List(80) { it + 15 }
     val heights = List(100) { it + 110 }
     val genders = listOf("Male", "Female", "Other")
     val weights = List(100) { it  + 30  }
@@ -45,6 +47,8 @@ fun SettingsScreen(navController: NavController) {
 
     var username by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
+    var age by remember { mutableStateOf("") }
+    var expandedAge by remember { mutableStateOf(false) }
     var height by remember { mutableStateOf("") }
     var expandedHeight by remember { mutableStateOf(false) }
     var gender by remember { mutableStateOf("") }
@@ -70,6 +74,7 @@ fun SettingsScreen(navController: NavController) {
                         document.data?.let { data ->
                             username = data["username"] as? String ?: ""
                             phone = data["phone"] as? String ?: ""
+                            age = data["age"] as? String ?: ""
                             height = data["height"] as? String ?: ""
                             gender = data["gender"] as? String ?: ""
                             weight = data["weight"] as? String ?: ""
@@ -86,6 +91,7 @@ fun SettingsScreen(navController: NavController) {
                 val updates = mapOf(
                     "username" to username,
                     "phone" to phone,
+                    "age" to age,
                     "height" to height,
                     "gender" to gender,
                     "weight" to weight,
@@ -154,24 +160,20 @@ fun SettingsScreen(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Row ( modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 28.dp, bottom = 10.dp),
-            horizontalArrangement = Arrangement.Start,
-        ){
+
             IconButton(onClick = { navController.navigate("profile") }) {
                 Icon(
-                    imageVector = Icons.Default.ArrowBack,
+                    imageVector = Icons.Default.ArrowBackIosNew,
                     contentDescription = "ArrowBack"
                 )
             }
-            Spacer(modifier = Modifier.height(64.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             Button(onClick = { imagePickerLauncher.launch("image/*") }) {
                 Text("Select Profile Image")
             }
-        }
 
+        Spacer(modifier = Modifier.height(10.dp))
 
         OutlinedTextField(
             value = username,
@@ -210,6 +212,34 @@ fun SettingsScreen(navController: NavController) {
                             expandedGender = false
                         },
                         text = { Text(item) }
+                    )
+                }
+            }
+        }
+        ExposedDropdownMenuBox(
+            expanded = expandedAge,
+            onExpandedChange = { expandedAge = !expandedAge }
+        ) {
+            TextField(
+                value = age,
+                onValueChange = { },
+                label = { Text("Select Age") },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedAge) },
+                colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                modifier = Modifier.menuAnchor()
+            )
+            ExposedDropdownMenu(
+                expanded = expandedAge,
+                onDismissRequest = { expandedAge = false }
+            ) {
+                ages.forEach { item ->
+                    DropdownMenuItem(
+                        onClick = {
+                            age = item.toString()
+                            expandedAge = false
+                        },
+                        text = { Text("${item} years old") }
                     )
                 }
             }
