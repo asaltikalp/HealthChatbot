@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
             AppTheme {
                 val navController = rememberNavController()
 
-                NavHost(navController = navController, startDestination = "profile") {
+                NavHost(navController = navController, startDestination = "login") {
                     composable("login") { LoginScreen(navController) }
                     composable("register") { RegisterScreen(navController) }
                     composable("chat") { ChatScreen(navController) }
